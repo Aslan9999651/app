@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- إعدادات تشغيل الصفحة كتطبيق iOS حقيقي بدون شريط سفاري -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Binance">
+    <meta name="theme-color" content="#1B2026">
+    <link rel="apple-touch-icon" id="ios-app-icon" href="">
+
+    <title>Binance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #1B2026;
+            --bg-input: #262D37;
+            --bg-modal: #1E2329;
+            --text-primary: #EAECEF;
+            --text-secondary: #848E9C;
+            --text-muted: #5E6673;
+            --brand-yellow: #FCD535;
+            --brand-yellow-active: #F0B90B;
+            --border-line: #2B3139;
+            --green-status: #0ECB81;
+            --yellow-status: #F0B90B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow: hidden;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        /* حاوية التطبيق بملء الشاشة لجميع موديلات الآيفون بما فيها Pro Max */
+        .app-shell {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            margin: 0 auto;
+            background-color: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* إظهار إطار الجوال على الكمبيوتر فقط وليس على الآيفون */
+        @media (min-width: 540px) and (hover: hover) {
+            html, body {
+                background-color: #0B0E11;
+            }
+            .app-shell {
+                position: relative;
+                max-width: 412px;
+                height: 92dvh;
+                max-height: 868px;
+                margin: 4dvh auto;
+                border-radius: 42px;
+                border: 8px solid #2B3139;
+                box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+            }
+        }
+
+        /* --- شريط حالة iPhone الافتراضي (يظهر فقط عند المعاينة في المتصفح أو الكمبيوتر) --- */
+        .ios-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 25px 8px;
+            background-color: var(--bg-main);
+            direction: ltr;
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        /* عند التشغيل كتطبيق مستقل على الآيفون: إخفاء الشريط الوهمي واستخدام شريط الآيفون الحقيقي */
+        @media all and (display-mode: standalone) {
+            .ios-status-bar {
+                display: none !important;
+            }
+            .app-shell,
+            .processing-screen,
+            .history-screen {
+                padding-top: env(safe-area-inset-top, 44px);
+            }
+            .processing-screen {
+                top: 0 !important;
+            }
+        }
+
+        body.is-standalone .ios-status-bar {
+            display: none !important;
+        }
+        body.is-standalone .app-shell,
+        body.is-standalone .processing-screen,
+        body.is-standalone .history-screen {
+            padding-top: env(safe-area-inset-top, 44px);
+        }
+        body.is-standalone .processing-screen {
+            top: 0 !important;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ios-time {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+            font-size: 15.5px;
+            font-weight: 600;
+            color: #FFFFFF;
+            letter-spacing: -0.3px;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .silent-bell-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.5px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 6.5px;
+        }
+
+        .ios-cellular-svg, .ios-wifi-svg {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .ios-battery {
+            display: flex;
+            align-items: center;
+            margin-left: 0.5px;
+        }
+        .battery-body {
+            width: 26.5px;
+            height: 12.5px;
+            background-color: rgba(255, 255, 255, 0.32);
+            border-radius: 3.8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .battery-fill-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 73%;
+            background-color: #FCD535;
+            transition: width 0.4s ease, background-color 0.4s ease;
+            z-index: 1;
+        }
+        .battery-body span {
+            position: relative;
+            z-index: 2;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            color: #1B2026;
+            line-height: 1;
+            letter-spacing: -0.4px;
+        }
+        .battery-cap {
+            width: 1.8px;
+            height: 4.2px;
+            background-color: rgba(255, 255, 255, 0.38);
+            border-radius: 0 1.5px 1.5px 0;
+            margin-left: 1.4px;
+        }
+
+        /* --- الترويسة العليا للمنصة --- */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 18px 12px;
+            flex-shrink: 0;
+        }
+
+        .header-back-btn, .header-history-icon {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+        }
+        .header-history-icon {
+            color: var(--text-secondary);
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        /* --- محتوى الحقول الرئيسية --- */
+        .scroll-content {
+            padding: 4px 18px 16px;
+            flex-grow: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .scroll-content::-webkit-scrollbar { display: none; }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 7px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .input-box {
+            background-color: var(--bg-input);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            height: 48px;
+            padding: 0 14px;
+            display: flex;
+            align-items: center;
+            transition: border-color 0.2s;
+            position: relative;
+        }
+        .input-box:focus-within {
+            border-color: var(--brand-yellow);
+        }
+
+        /* حجم 16px يمنع سفاري من عمل Zoom تلقائي عند الضغط على الحقول */
+        .input-field {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            width: 100%;
+            text-align: right;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        .input-field.ltr-input {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+        }
+        .input-field::placeholder {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .text-action-btn {
+            color: var(--brand-yellow);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .token-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .token-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #26A17B;
+        }
+
+        select.input-field {
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+        }
+        select.input-field option {
+            background-color: var(--bg-modal);
+            color: var(--text-primary);
+        }
+
+        .select-arrow {
+            position: absolute;
+            left: 14px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            display: flex;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 12.5px;
+        }
+        .balance-label { color: var(--text-secondary); }
+        .balance-value {
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            direction: ltr;
+        }
+
+        .info-notice {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            margin-top: 6px;
+        }
+
+        /* --- الشريط السفلي للسحب --- */
+        .bottom-checkout-bar {
+            padding: 12px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+            background-color: var(--bg-main);
+            border-top: 1px solid var(--border-line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .checkout-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .receive-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .receive-amount {
+            font-family: 'Inter', sans-serif;
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: ltr;
+            text-align: right;
+        }
+        .receive-amount span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .fee-subtext {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+        }
+
+        .btn-primary-yellow {
+            background-color: var(--brand-yellow);
+            color: #1E2329;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 42px;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn-primary-yellow:active {
+            transform: scale(0.98);
+            background-color: var(--brand-yellow-active);
+        }
+        .btn-primary-yellow:disabled {
+            background-color: #363C45;
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* --- نافذة تأكيد الطلب (Modal) --- */
+        .modal-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.65);
+            display: flex;
+            align-items: flex-end;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            z-index: 400;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-sheet {
+            width: 100%;
+            background-color: var(--bg-modal);
+            border-radius: 20px 20px 0 0;
+            padding: 20px 18px calc(24px + env(safe-area-inset-bottom, 0px));
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.active .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .modal-close {
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+        }
+
+        .modal-amount-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .modal-amount-sub {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .modal-amount-val {
+            font-family: 'Inter', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: ltr;
+        }
+
+        .modal-info-list {
+            border-top: 1px solid var(--border-line);
+            padding-top: 14px;
+            margin-bottom: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 13.5px;
+        }
+        .modal-row-lbl { color: var(--text-secondary); }
+        .modal-row-val {
+            color: var(--text-primary);
+            font-weight: 500;
+            max-width: 65%;
+            text-align: left;
+            word-break: break-all;
+            font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+        }
+
+        .btn-modal-confirm {
+            width: 100%;
+            height: 48px;
+            background-color: var(--brand-yellow);
+            color: #1E2329;
+            border: none;
+            border-radius: 10px;
+            font-size: 15.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2.5px solid rgba(30, 35, 41, 0.2);
+            border-top-color: #1E2329;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            display: none;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- شاشة "جارٍ مُعالجة السحب" --- */
+        .processing-screen {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-main);
+            z-index: 600;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .processing-screen.active {
+            transform: translateX(0);
+        }
+
+        .proc-top-bar {
+            padding: 12px 20px 0;
+            display: flex;
+            justify-content: flex-start;
+            flex-shrink: 0;
+        }
+
+        .proc-back-arrow {
+            background: none;
+            border: none;
+            color: #B7BDC6;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .proc-body {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8vh 20px 0;
+        }
+
+        .hourglass-container {
+            margin-bottom: 26px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .proc-heading {
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+        }
+
+        .proc-amount {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: ltr;
+            margin-bottom: 22px;
+            letter-spacing: 0.3px;
+        }
+
+        .proc-time-line {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 4px;
+            line-height: 1.6;
+        }
+        .proc-time-line #proc-live-clock {
+            font-family: 'Inter', -apple-system, sans-serif;
+            color: #D8DCE1;
+            font-weight: 600;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .proc-email-note {
+            font-size: 13.5px;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .proc-footer {
+            padding: 12px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+            flex-shrink: 0;
+        }
+
+        .btn-view-history {
+            width: 100%;
+            height: 48px;
+            background-color: var(--brand-yellow);
+            color: #1E2329;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-view-history:active {
+            background-color: var(--brand-yellow-active);
+        }
+
+        /* --- شاشة سجل المعاملات --- */
+        .history-screen {
+            position: absolute;
+            inset: 0;
+            background-color: var(--bg-main);
+            z-index: 700;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .history-screen.active {
+            transform: translateX(0);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border-line);
+            flex-shrink: 0;
+        }
+
+        .history-tabs {
+            display: flex;
+            background-color: #181C22;
+            border-bottom: 1px solid var(--border-line);
+            flex-shrink: 0;
+        }
+        .history-tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+        .history-tab.active {
+            color: var(--brand-yellow);
+        }
+        .history-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background-color: var(--brand-yellow);
+            border-radius: 2px;
+        }
+
+        .history-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px 18px calc(16px + env(safe-area-inset-bottom, 0px));
+            scrollbar-width: none;
+        }
+        .history-list::-webkit-scrollbar { display: none; }
+
+        .history-item {
+            background-color: var(--bg-input);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .history-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-token-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+        }
+        .history-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .status-processing {
+            color: var(--yellow-status);
+            background-color: rgba(240, 185, 11, 0.12);
+        }
+        .status-completed {
+            color: var(--green-status);
+            background-color: rgba(14, 203, 129, 0.12);
+        }
+
+        .history-item-middle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13.5px;
+        }
+        .history-amount {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            color: var(--text-primary);
+            direction: ltr;
+        }
+        .history-network {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .history-item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 8px;
+        }
+        .history-date {
+            font-family: 'Inter', sans-serif;
+            direction: ltr;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-shell">
+
+        <!-- شريط حالة iPhone (يختفي تلقائياً عند التشغيل كتطبيق مستقل على الآيفون) -->
+        <div class="ios-status-bar">
+            <div class="status-left">
+                <span class="ios-time" id="v-phone-time">--:--</span>
+                <span class="silent-bell-icon">
+                    <svg width="13.5" height="13.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.5 11.2C18.5 7.9 16.7 5.2 13.8 4.4V3.6C13.8 2.6 13 1.8 12 1.8C11 1.8 10.2 2.6 10.2 3.6V4.4C9.5 4.6 8.8 4.9 8.2 5.4L18.5 15.7V11.2Z" fill="#FFFFFF"/>
+                        <path d="M5.5 9.2C5.5 9.8 5.5 10.5 5.5 11.2V16L3.4 18.1C3.1 18.4 3.3 19 3.8 19H16.6L5.5 7.9V9.2Z" fill="#FFFFFF"/>
+                        <path d="M12 22.2C13.2 22.2 14.2 21.3 14.3 20.2H9.7C9.8 21.3 10.8 22.2 12 22.2Z" fill="#FFFFFF"/>
+                        <line x1="2.2" y1="2.8" x2="21.2" y2="21.8" stroke="#1B2026" stroke-width="3.6" stroke-linecap="round"/>
+                        <line x1="2.2" y1="2.8" x2="21.2" y2="21.8" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round"/>
+                    </svg>
+                </span>
+            </div>
+
+            <div class="status-right">
+                <div class="ios-cellular-svg" onclick="toggleSignalBars()" title="تبديل الشبكة">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.2" y="7.6" width="3.1" height="4.4" rx="1.1" fill="#FFFFFF"/>
+                        <rect x="5.0" y="5.2" width="3.1" height="6.8" rx="1.1" fill="#FFFFFF"/>
+                        <rect id="sig-bar-3" x="9.8" y="2.6" width="3.1" height="9.4" rx="1.1" fill="#FFFFFF" fill-opacity="0.32"/>
+                        <rect id="sig-bar-4" x="14.6" y="0" width="3.1" height="12" rx="1.1" fill="#FFFFFF" fill-opacity="0.32"/>
+                    </svg>
+                </div>
+
+                <div class="ios-wifi-svg">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2.28 5.28 L0.82 3.82 A10.15 10.15 0 0 1 15.18 3.82 L13.72 5.28 A8.08 8.08 0 0 0 2.28 5.28 Z" fill="#FFFFFF"/>
+                        <path d="M4.82 7.82 L3.36 6.36 A6.56 6.56 0 0 1 12.64 6.36 L11.18 7.82 A4.50 4.50 0 0 0 4.82 7.82 Z" fill="#FFFFFF"/>
+                        <path d="M8 11.45 L5.85 9.30 A3.04 3.04 0 0 1 10.15 9.30 Z" fill="#FFFFFF"/>
+                    </svg>
+                </div>
+
+                <div class="ios-battery">
+                    <div class="battery-body" id="v-batt-body">
+                        <div class="battery-fill-bar" id="v-batt-fill"></div>
+                        <span id="v-batt-text">--</span>
+                    </div>
+                    <div class="battery-cap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الترويسة العليا -->
+        <div class="app-header">
+            <button class="header-back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
+            <span class="header-title">إرسال <span class="q-dynamic-token-txt">USDT</span></span>
+            <div class="header-history-icon" onclick="openHistoryScreen()" title="سجل المعاملات">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            </div>
+        </div>
+
+        <!-- محتوى الحقول -->
+        <div class="scroll-content">
+            <div class="form-group">
+                <div class="form-label">
+                    <span>العملة الرقمية</span>
+                    <span style="font-size: 11.5px; color: var(--brand-yellow);">يدعم جميع الرموز والعملات</span>
+                </div>
+                <div class="input-box">
+                    <input type="text" class="input-field ltr-input" id="custom-token-input" value="USDT" oninput="syncQuantumToken()" placeholder="أدخل رمز العملة (مثال: BTC, ETH, SOL)">
+                    <div class="input-actions">
+                        <div class="token-pill">
+                            <span class="token-dot"></span>
+                            <span id="token-display-badge">USDT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">
+                    <span>العنوان</span>
+                </div>
+                <div class="input-box">
+                    <input type="text" class="input-field ltr-input" id="quantum-address" value="0x71C7656EC7ab88b098defB751B7401B5f6d147a3" placeholder="اضغط مطولاً للصق العنوان">
+                    <div class="input-actions">
+                        <span class="text-action-btn" onclick="pasteClipboard()">لصق</span>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#848E9C" stroke-width="2">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+                            <line x1="7" y1="12" x2="17" y2="12"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">
+                    <span>الشبكة</span>
+                </div>
+                <div class="input-box">
+                    <select class="input-field" id="quantum-network">
+                        <option value="TRX Tron (TRC20)">TRX Tron (TRC20)</option>
+                        <option value="BSC BNB Smart Chain (BEP20)">BSC BNB Smart Chain (BEP20)</option>
+                        <option value="ETH Ethereum (ERC20)">ETH Ethereum (ERC20)</option>
+                        <option value="SOL Solana">SOL Solana</option>
+                        <option value="BTC Bitcoin">BTC Bitcoin</option>
+                    </select>
+                    <div class="select-arrow">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="form-label">
+                    <span>مبلغ السحب</span>
+                </div>
+                <div class="input-box">
+                    <input type="number" step="0.01" inputmode="decimal" class="input-field ltr-input" id="quantum-qty" value="32655.36" oninput="calculateQuantumFlow()">
+                    <div class="input-actions">
+                        <span style="color: var(--text-secondary); font-size: 13px; font-weight: 600;" class="q-dynamic-token-txt">USDT</span>
+                        <span class="text-action-btn" onclick="maximizeQuantumFlow()">الحد الأقصى</span>
+                    </div>
+                </div>
+                <div class="balance-row">
+                    <span class="balance-label">الرصيد المتاح</span>
+                    <span class="balance-value">8,419,250.00 <span class="q-dynamic-token-txt">USDT</span></span>
+                </div>
+            </div>
+
+            <div class="info-notice">
+                • يُرجى التأكد من مطابقة شبكة الاستلام مع شبكة الإرسال لتفادي فقدان الأصول.<br>
+                • تتم معالجة السحب تلقائياً فور تأكيد العقد على السلسلة.
+            </div>
+        </div>
+
+        <!-- الشريط السفلي -->
+        <div class="bottom-checkout-bar">
+            <div class="checkout-details">
+                <span class="receive-label">المبلغ المُستلم</span>
+                <div class="receive-amount">
+                    <span id="quantum-net-result">32,654.36</span> <span class="q-dynamic-token-txt">USDT</span>
+                </div>
+                <span class="fee-subtext">رسوم الشبكة 1.00 <span class="q-dynamic-token-txt">USDT</span></span>
+            </div>
+            <button class="btn-primary-yellow" id="quantumGoBtn" onclick="triggerQuantumModal()">سحب</button>
+        </div>
+
+        <!-- نافذة التأكيد -->
+        <div class="modal-overlay" id="quantumModal">
+            <div class="modal-sheet">
+                <div class="modal-header">
+                    <span class="modal-title">تأكيد الطلب</span>
+                    <div class="modal-close" onclick="dismissQuantumModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="modal-amount-box">
+                    <div class="modal-amount-sub">المبلغ الفعلي المستلم</div>
+                    <div class="modal-amount-val" id="modal-node-amount">---</div>
+                </div>
+
+                <div class="modal-info-list">
+                    <div class="modal-row">
+                        <span class="modal-row-lbl">العنوان</span>
+                        <span class="modal-row-val" id="node-target-address">---</span>
+                    </div>
+                    <div class="modal-row">
+                        <span class="modal-row-lbl">الشبكة</span>
+                        <span class="modal-row-val" id="node-target-protocol">---</span>
+                    </div>
+                    <div class="modal-row">
+                        <span class="modal-row-lbl">المصدر</span>
+                        <span class="modal-row-val">محفظة التداول الفوري</span>
+                    </div>
+                    <div class="modal-row">
+                        <span class="modal-row-lbl">رسوم الشبكة</span>
+                        <span class="modal-row-val">1.00 <span class="q-dynamic-token-txt">USDT</span></span>
+                    </div>
+                </div>
+
+                <button class="btn-modal-confirm" id="broadcastFinalBtn" onclick="executeAtomicBroadcast()">
+                    <span id="broadcastBtnText">تأكيد</span>
+                    <div class="loader-spinner" id="broadcastSpinner"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- شاشة جارٍ معالجة السحب -->
+        <div class="processing-screen" id="quantumProcScreen">
+            <div class="proc-top-bar">
+                <button class="proc-back-arrow" onclick="exitQuantumProcView()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="13 6 19 12 13 18"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="proc-body">
+                <div class="hourglass-container">
+                    <svg width="68" height="78" viewBox="0 0 68 78" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="4" width="56" height="5.5" rx="2.75" stroke="#EAECEF" stroke-width="2.2" fill="#1B2026"/>
+                        <rect x="6" y="68.5" width="56" height="5.5" rx="2.75" stroke="#EAECEF" stroke-width="2.2" fill="#1B2026"/>
+                        <path d="M18.5 23.5 H49.5 C46.5 31 38 35.5 34 37.5 C30 35.5 21.5 31 18.5 23.5 Z" fill="#F0B90B"/>
+                        <path d="M13.5 61.5 H54.5 C55.2 64 55.5 66.5 55.5 67.5 H12.5 C12.5 66.5 12.8 64 13.5 61.5 Z" fill="#F0B90B"/>
+                        <path d="M12 9.5 C12 24.5 27.5 33 31.5 37.2 C32.8 38.5 32.8 39.5 31.5 40.8 C27.5 45 12 53.5 12 68.5 H56 C56 53.5 40.5 45 36.5 40.8 C35.2 39.5 35.2 38.5 36.5 37.2 C40.5 33 56 24.5 56 9.5 Z" stroke="#EAECEF" stroke-width="2.3" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+
+                <h2 class="proc-heading">جارٍ مُعالجة السحب</h2>
+                <div class="proc-amount" id="proc-display-final-amount">---</div>
+
+                <div class="proc-time-line">
+                    الوقت المُقدّر للانتهاء: <span id="proc-live-clock"></span>.
+                </div>
+
+                <div class="proc-email-note">
+                    ستتلقى بريداً إلكترونياً بمُجرّد الانتهاء من السحب.
+                </div>
+            </div>
+
+            <div class="proc-footer">
+                <button class="btn-view-history" onclick="openHistoryScreen()">عرض السجل</button>
+            </div>
+        </div>
+
+        <!-- شاشة سجل المعاملات -->
+        <div class="history-screen" id="historyScreen">
+            <div class="history-header">
+                <button class="proc-back-arrow" onclick="closeHistoryScreen()">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="13 6 19 12 13 18"></polyline>
+                    </svg>
+                </button>
+                <span class="header-title">سجل المعاملات</span>
+                <div style="width: 22px;"></div>
+            </div>
+
+            <div class="history-tabs">
+                <div class="history-tab active" id="tabWithdrawals" onclick="switchHistoryTab('withdrawals')">السحوبات</div>
+                <div class="history-tab" id="tabDeposits" onclick="switchHistoryTab('deposits')">الإيداعات</div>
+            </div>
+
+            <div class="history-list" id="historyListContainer"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // اكتشاف وضع التطبيق المستقل في الآيفون
+        (function detectStandaloneMode() {
+            const isIOSStandalone = window.navigator.standalone === true;
+            const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+            if (isIOSStandalone || isPWAStandalone) {
+                document.body.classList.add('is-standalone');
+            }
+        })();
+
+        // توليد أيقونة Binance بجودة عالية للشاشة الرئيسية للآيفون
+        (function generateIOSAppIcon() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 180;
+                canvas.height = 180;
+                const ctx = canvas.getContext('2d');
+
+                ctx.fillStyle = '#1E2329';
+                ctx.fillRect(0, 0, 180, 180);
+
+                ctx.fillStyle = '#F3BA2F';
+                const drawDiamond = (cx, cy, r) => {
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy - r);
+                    ctx.lineTo(cx + r, cy);
+                    ctx.lineTo(cx, cy + r);
+                    ctx.lineTo(cx - r, cy);
+                    ctx.closePath();
+                    ctx.fill();
+                };
+
+                // رسم شعار معيني متناسق
+                ctx.save();
+                ctx.translate(90, 90);
+                // الجزء العلوي
+                ctx.beginPath();
+                ctx.moveTo(0, -54);
+                ctx.lineTo(36, -18);
+                ctx.lineTo(22, -4);
+                ctx.lineTo(0, -26);
+                ctx.lineTo(-22, -4);
+                ctx.lineTo(-36, -18);
+                ctx.closePath();
+                ctx.fill();
+                // الجزء السفلي
+                ctx.beginPath();
+                ctx.moveTo(0, 54);
+                ctx.lineTo(36, 18);
+                ctx.lineTo(22, 4);
+                ctx.lineTo(0, 26);
+                ctx.lineTo(-22, 4);
+                ctx.lineTo(-36, 18);
+                ctx.closePath();
+                ctx.fill();
+                // الوسط والجانبين
+                drawDiamond(0, 0, 14);
+                drawDiamond(-44, 0, 12);
+                drawDiamond(44, 0, 12);
+                ctx.restore();
+
+                const iconLink = document.getElementById('ios-app-icon');
+                if (iconLink) {
+                    iconLink.href = canvas.toDataURL('image/png');
+                }
+            } catch (e) {}
+        })();
+
+        const TX_FEE = 1.00;
+        const ACCOUNT_LIMIT = 8419250;
+        let fullSignal = false;
+
+        let transactions = [
+            { type: 'withdrawal', token: 'USDT', amount: '32,654.36', network: 'TRX Tron (TRC20)', status: 'قيد المعالجة', statusClass: 'status-processing', date: '15-11-2026 22:05:18' },
+            { type: 'withdrawal', token: 'USDT', amount: '1,500.00', network: 'BSC BNB Smart Chain', status: 'مكتمل', statusClass: 'status-completed', date: '12-10-2026 14:32:10' },
+            { type: 'deposit', token: 'USDT', amount: '50,000.00', network: 'TRX Tron (TRC20)', status: 'مكتمل', statusClass: 'status-completed', date: '10-10-2026 09:15:44' }
+        ];
+
+        let currentHistoryTab = 'withdrawals';
+
+        function toggleSignalBars() {
+            fullSignal = !fullSignal;
+            const opacityVal = fullSignal ? "1" : "0.32";
+            document.getElementById('sig-bar-3').setAttribute('fill-opacity', opacityVal);
+            document.getElementById('sig-bar-4').setAttribute('fill-opacity', opacityVal);
+        }
+
+        function updateBatteryColor(percent) {
+            const fillEl = document.getElementById('v-batt-fill');
+            const textEl = document.getElementById('v-batt-text');
+            const bodyEl = document.getElementById('v-batt-body');
+
+            fillEl.style.width = `${percent}%`;
+            textEl.innerText = percent;
+
+            if (percent < 30) {
+                fillEl.style.backgroundColor = '#FF3B30';
+                bodyEl.style.backgroundColor = 'rgba(255, 59, 48, 0.32)';
+                textEl.style.color = '#FFFFFF';
+            } else if (percent > 75) {
+                fillEl.style.backgroundColor = '#34C759';
+                bodyEl.style.backgroundColor = 'rgba(52, 199, 89, 0.32)';
+                textEl.style.color = '#1B2026';
+            } else {
+                fillEl.style.backgroundColor = '#FCD535';
+                bodyEl.style.backgroundColor = 'rgba(255, 255, 255, 0.32)';
+                textEl.style.color = '#1B2026';
+            }
+        }
+
+        function handleSystemClock() {
+            const timeData = new Date();
+            let hours = timeData.getHours();
+            let minutes = String(timeData.getMinutes()).padStart(2, '0');
+
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            document.getElementById('v-phone-time').innerText = `${hours}:${minutes}`;
+
+            if (navigator.getBattery) {
+                navigator.getBattery().then(function(battery) {
+                    const currentPercent = Math.floor(battery.level * 100);
+                    updateBatteryColor(currentPercent);
+                });
+            } else {
+                updateBatteryColor(24);
+            }
+        }
+
+        setInterval(handleSystemClock, 1000);
+
+        function syncQuantumToken() {
+            let userToken = document.getElementById('custom-token-input').value.trim().toUpperCase();
+            if (!userToken) userToken = "USDT";
+            document.getElementById('token-display-badge').innerText = userToken;
+
+            const dynLabels = document.querySelectorAll('.q-dynamic-token-txt');
+            dynLabels.forEach(el => { el.innerText = userToken; });
+            calculateQuantumFlow();
+        }
+
+        function calculateQuantumFlow() {
+            const rawAmount = document.getElementById('quantum-qty').value;
+            const flowResultEl = document.getElementById('quantum-net-result');
+            const subActionBtn = document.getElementById('quantumGoBtn');
+            const numericValue = parseFloat(rawAmount);
+
+            if (numericValue > TX_FEE) {
+                const calculatedValue = numericValue - TX_FEE;
+                flowResultEl.innerText = calculatedValue.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                subActionBtn.disabled = false;
+            } else {
+                flowResultEl.innerText = "0.00";
+                subActionBtn.disabled = true;
+            }
+        }
+
+        function maximizeQuantumFlow() {
+            document.getElementById('quantum-qty').value = ACCOUNT_LIMIT;
+            calculateQuantumFlow();
+        }
+
+        async function pasteClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) document.getElementById('quantum-address').value = text;
+            } catch (e) {}
+        }
+
+        function triggerQuantumModal() {
+            const currentProtocol = document.getElementById('quantum-network').value;
+            const currentTargetAddr = document.getElementById('quantum-address').value;
+            const liveNetResult = document.getElementById('quantum-net-result').innerText;
+            const currentActiveSymbol = document.getElementById('custom-token-input').value.trim().toUpperCase() || "USDT";
+
+            document.getElementById('node-target-address').innerText = currentTargetAddr;
+            document.getElementById('modal-node-amount').innerText = `${liveNetResult} ${currentActiveSymbol}`;
+            document.getElementById('node-target-protocol').innerText = currentProtocol;
+            document.getElementById('quantumModal').classList.add('active');
+        }
+
+        function dismissQuantumModal() {
+            document.getElementById('quantumModal').classList.remove('active');
+            restoreQuantumBtn();
+        }
+
+        function buildAtomicTimestamp() {
+            const nowObj = new Date();
+            nowObj.setMinutes(nowObj.getMinutes() + 1);
+
+            const hourStr = String(nowObj.getHours()).padStart(2, '0');
+            const minStr = String(nowObj.getMinutes()).padStart(2, '0');
+            const secStr = String(nowObj.getSeconds()).padStart(2, '0');
+            const dateStr = String(nowObj.getDate()).padStart(2, '0');
+            const moStr = String(nowObj.getMonth() + 1).padStart(2, '0');
+            const yearStr = nowObj.getFullYear();
+
+            return `${hourStr}:${minStr}:${secStr} ${dateStr}-${moStr}-${yearStr}`;
+        }
+
+        function executeAtomicBroadcast() {
+            const textEl = document.getElementById('broadcastBtnText');
+            const spinnerEl = document.getElementById('broadcastSpinner');
+            const broadcastBtn = document.getElementById('broadcastFinalBtn');
+
+            textEl.style.display = 'none';
+            spinnerEl.style.display = 'block';
+            broadcastBtn.style.pointerEvents = 'none';
+
+            setTimeout(() => {
+                document.getElementById('quantumModal').classList.remove('active');
+                restoreQuantumBtn();
+
+                const totalCalculatedValue = document.getElementById('quantum-net-result').innerText;
+                const finalActiveTokenSymbol = document.getElementById('custom-token-input').value.trim().toUpperCase() || "USDT";
+                const networkVal = document.getElementById('quantum-network').value;
+                const timestampStr = buildAtomicTimestamp();
+
+                document.getElementById('proc-display-final-amount').innerText = totalCalculatedValue + " " + finalActiveTokenSymbol;
+                document.getElementById('proc-live-clock').innerText = timestampStr;
+
+                transactions.unshift({
+                    type: 'withdrawal',
+                    token: finalActiveTokenSymbol,
+                    amount: totalCalculatedValue,
+                    network: networkVal,
+                    status: 'قيد المعالجة',
+                    statusClass: 'status-processing',
+                    date: timestampStr
+                });
+
+                document.getElementById('quantumProcScreen').classList.add('active');
+            }, 900);
+        }
+
+        function restoreQuantumBtn() {
+            document.getElementById('broadcastBtnText').style.display = 'block';
+            document.getElementById('broadcastSpinner').style.display = 'none';
+            document.getElementById('broadcastFinalBtn').style.pointerEvents = 'auto';
+        }
+
+        function exitQuantumProcView() {
+            document.getElementById('quantumProcScreen').classList.remove('active');
+        }
+
+        function openHistoryScreen() {
+            renderHistoryList();
+            document.getElementById('historyScreen').classList.add('active');
+        }
+
+        function closeHistoryScreen() {
+            document.getElementById('historyScreen').classList.remove('active');
+        }
+
+        function switchHistoryTab(tab) {
+            currentHistoryTab = tab;
+            document.getElementById('tabWithdrawals').classList.toggle('active', tab === 'withdrawals');
+            document.getElementById('tabDeposits').classList.toggle('active', tab === 'deposits');
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('historyListContainer');
+            container.innerHTML = '';
+
+            const filtered = transactions.filter(tx => currentHistoryTab === 'withdrawals' ? tx.type === 'withdrawal' : tx.type === 'deposit');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-history">لا توجد سجلات مطابقة</div>`;
+                return;
+            }
+
+            filtered.forEach(tx => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="history-item-top">
+                        <span class="history-token-name">${tx.type === 'withdrawal' ? 'سحب' : 'إيداع'} ${tx.token}</span>
+                        <span class="history-status ${tx.statusClass}">${tx.status}</span>
+                    </div>
+                    <div class="history-item-middle">
+                        <span class="history-amount">${tx.amount} ${tx.token}</span>
+                        <span class="history-network">${tx.network}</span>
+                    </div>
+                    <div class="history-item-bottom">
+                        <span>التاريخ والوقت</span>
+                        <span class="history-date">${tx.date}</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        window.onload = function() {
+            handleSystemClock();
+            calculateQuantumFlow();
+            syncQuantumToken();
+            document.getElementById('proc-live-clock').innerText = buildAtomicTimestamp();
+        };
+    </script>
+</body>
+</html>
